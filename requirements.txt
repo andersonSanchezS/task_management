@@ -1,0 +1,6 @@
+Django
+django-environ
+django-role-permissions
+djangorestframework
+djangorestframework-simplejwt
+mysqlclient
