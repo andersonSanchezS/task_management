@@ -10,10 +10,14 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def get_token(cls, user):
         roles = []
         token = super().get_token(user)
+        for role in get_user_roles(user):
+            roles.append(role.__name__.lower())
 
         # Add custom claims
         token['name'] = f'{user.first_name} {user.last_name}'
-        token['company'] = user.company.id
+        token['company_id'] = user.company.id
+        token['company_name'] = user.company.description
+        token['roles'] = roles
 
         return token
 

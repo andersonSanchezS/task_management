@@ -15,6 +15,9 @@ class Admin(AbstractUserRole):
         'add_team': True,
         'update_team': True,
         'delete_team': True,
+        'view_permission': True,
+        'add_permission': True,
+        'delete_permission': True,
     }
 
 
@@ -25,6 +28,9 @@ class Manager(AbstractUserRole):
         'add_team': True,
         'update_team': True,
         'delete_team': True,
+        'view_permission': True,
+        'add_permission': True,
+        'delete_permission': True,
     }
 
 
