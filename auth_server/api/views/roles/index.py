@@ -10,6 +10,8 @@ from rolepermissions.decorators import has_permission_decorator
 from rolepermissions.roles import assign_role, remove_role
 # Models
 from auth_server.models import User
+# Utils
+from auth_server.utils.decodeJWT import decodeJWT
 
 
 @api_view(['GET'])
@@ -29,10 +31,13 @@ def roleList(request, *args, **kwargs):
 @has_permission_decorator('add_role')
 def addRole(request, pk):
     try:
+        token = decodeJWT(request)
         role = request.data['role']
         user = User.objects.get(pk=pk)
-        assign_role(user, role)
-        return Response({'message': 'Role added'}, status=status.HTTP_200_OK)
+        if token['is_admin'] or role == 'worker':
+            assign_role(user, role)
+            return Response({'msg': 'Role added'}, status=status.HTTP_200_OK)
+        return Response({'msg': 'You are not authorized to add this role'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -43,10 +48,13 @@ def addRole(request, pk):
 @has_permission_decorator('delete_role')
 def removeRole(request, pk):
     try:
+        token = decodeJWT(request)
         role = request.data['role']
         user = User.objects.get(pk=pk)
-        remove_role(user, role)
-        return Response({'message': 'Role deleted'}, status=status.HTTP_200_OK)
+        if token['is_admin']:
+            remove_role(user, role)
+            return Response({'message': 'Role deleted'}, status=status.HTTP_200_OK)
+        return Response({'message': 'You are not authorized to delete this role'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)

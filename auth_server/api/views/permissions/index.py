@@ -8,15 +8,21 @@ from rolepermissions.permissions import available_perm_status
 from rolepermissions.decorators import has_permission_decorator
 # Models
 from auth_server.models import User
+# Utils
+from auth_server.utils.decodeJWT import decodeJWT
 
 
 @api_view(['GET'])
 @has_permission_decorator('view_permission')
 def userPermissions(request, pk):
     try:
+        token = decodeJWT(request)
         user = User.objects.get(pk=pk)
-        permissions = available_perm_status(user)
-        return Response({'permissions': permissions}, status=status.HTTP_200_OK)
+        if token['is_admin'] or token['user_id'] == user.id:
+            permissions = available_perm_status(user)
+            return Response({'data': permissions}, status=status.HTTP_200_OK)
+        return Response({'msg': 'You are not authorized to view this user permissions'},
+                        status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -27,9 +33,12 @@ def userPermissions(request, pk):
 @has_permission_decorator('add_permission')
 def addPermission(request, pk):
     try:
+        token = decodeJWT(request)
         user = User.objects.get(pk=pk)
-        grant_permission(user, request.data['permission'])
-        return Response({'Success': 'Permission granted'}, status=status.HTTP_200_OK)
+        if token['is_admin'] or token['roles'] == 'manager':
+            grant_permission(user, request.data['permission'])
+            return Response({'msg': 'Permission granted'}, status=status.HTTP_200_OK)
+        return Response({'msg': 'You are not authorized to add this permission'})
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -40,9 +49,12 @@ def addPermission(request, pk):
 @has_permission_decorator('delete_permission')
 def removePermission(request, pk):
     try:
+        token = decodeJWT(request)
         user = User.objects.get(pk=pk)
-        revoke_permission(user, request.data['permission'])
-        return Response({'Success': 'Permission granted'}, status=status.HTTP_200_OK)
+        if token['is_admin'] or token['roles'] == 'manager':
+            revoke_permission(user, request.data['permission'])
+            return Response({'msg': 'Permission granted'}, status=status.HTTP_200_OK)
+        return Response({'msg': 'You are not authorized to delete this permission'})
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
