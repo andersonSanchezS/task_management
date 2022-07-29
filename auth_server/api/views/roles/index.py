@@ -24,6 +24,7 @@ def roleList(request, *args, **kwargs):
     except Exception as e:
         return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @api_view(['POST'])
 @has_permission_decorator('add_role')
 def addRole(request, pk):
@@ -32,9 +33,9 @@ def addRole(request, pk):
         user = User.objects.get(pk=pk)
         assign_role(user, role)
         return Response({'message': 'Role added'}, status=status.HTTP_200_OK)
-    except user.DoesNotExist:
-        return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        if str(e) == 'User matching query does not exist.':
+            return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -46,7 +47,7 @@ def removeRole(request, pk):
         user = User.objects.get(pk=pk)
         remove_role(user, role)
         return Response({'message': 'Role deleted'}, status=status.HTTP_200_OK)
-    except user.DoesNotExist:
-        return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        if str(e) == 'User matching query does not exist.':
+            return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
         return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
