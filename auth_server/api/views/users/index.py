@@ -9,7 +9,7 @@ from auth_server.api.serializers.users.index import UserSerializer
 from rolepermissions.decorators import has_permission_decorator
 # Utils
 from auth_server.utils.decodeJWT import decodeJWT
-
+import datetime
 
 @api_view(['POST'])
 def registerUser(request):
@@ -31,6 +31,7 @@ def deleteUser(request, pk):
         user = User.objects.get(pk=pk, is_active=True)
         if token['is_admin'] or token['user_id'] == user.id:
             user.is_active = False
+            user.updated_at = datetime.now()
             user.save()
             return Response({'msg': 'User deleted'}, status=status.HTTP_200_OK)
         return Response({'msg': 'You are not authorized to delete this user'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -46,6 +47,7 @@ def activateUser(request, pk):
     try:
         user = User.objects.get(pk=pk, is_active=False)
         user.is_active = True
+        user.updated_at = datetime.now()
         user.save()
         return Response({'message': 'User Activated'}, status=status.HTTP_200_OK)
     except Exception as e:
@@ -66,6 +68,7 @@ def updateUser(request, pk):
                 user.email = request.data['email']
             if request.data['password'] != "":
                 user.set_password(request.data['password'])
+            user.updated_at = datetime.now()
             user.save()
             return Response({'message': 'User updated'}, status=status.HTTP_200_OK)
         return Response({'message': 'You are not authorized to update this user'}, status=status.HTTP_401_UNAUTHORIZED)

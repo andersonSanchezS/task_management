@@ -4,7 +4,7 @@ from rest_framework import serializers
 from task_server.models import Company
 
 
-class TeamSerializer(serializers.ModelSerializer):
+class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
         fields = "__all__"
