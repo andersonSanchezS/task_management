@@ -35,7 +35,7 @@ def addPermission(request, pk):
     try:
         token = decodeJWT(request)
         user = User.objects.get(pk=pk)
-        if token['is_admin'] or token['roles'] == 'manager':
+        if token['is_admin'] or token['roles'].count('manager') == 1:
             grant_permission(user, request.data['permission'])
             return Response({'msg': 'Permission granted'}, status=status.HTTP_200_OK)
         return Response({'msg': 'You are not authorized to add this permission'})
@@ -51,7 +51,7 @@ def removePermission(request, pk):
     try:
         token = decodeJWT(request)
         user = User.objects.get(pk=pk)
-        if token['is_admin'] or token['roles'] == 'manager':
+        if token['is_admin'] or token['roles'].count('manager') == 1:
             revoke_permission(user, request.data['permission'])
             return Response({'msg': 'Permission granted'}, status=status.HTTP_200_OK)
         return Response({'msg': 'You are not authorized to delete this permission'})

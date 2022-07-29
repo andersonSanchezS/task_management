@@ -51,7 +51,7 @@ def updateCompany(request, pk):
         token = decodeJWT(request)
         if token['company_id'] == pk:
             company = Company.objects.get(pk=pk)
-            company.updated_at = dt.now()
+            company.updated_at = dt.utcnow()
             serializer = CompanySerializer(company, data=request.data)
             if serializer.is_valid():
                 serializer.save()
