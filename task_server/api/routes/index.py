@@ -6,4 +6,6 @@ urlpatterns = [
     path('team_roles/', include('task_server.api.routes.team_role.index')),
     path('team_members/', include('task_server.api.routes.team_member.index')),
     path('projects/', include('task_server.api.routes.project.index')),
+    path('project_teams/', include('task_server.api.routes.project_team.index')),
+    path('tasks/', include('task_server.api.routes.task.index')),
 ]

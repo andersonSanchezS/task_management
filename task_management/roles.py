@@ -46,6 +46,10 @@ class Admin(AbstractUserRole):
         'add_company': True,
         'update_company': True,
         'delete_company': True,
+        'view_project_team': True,
+        'add_project_team': True,
+        'update_project_team': True,
+        'delete_project_team': True,
     }
 
 
@@ -87,6 +91,10 @@ class Manager(AbstractUserRole):
         'update_comment': True,
         'delete_comment': True,
         'view_company': True,
+        'view_project_team': True,
+        'add_project_team': True,
+        'update_project_team': True,
+        'delete_project_team': True,
     }
 
 
@@ -115,4 +123,5 @@ class Worker(AbstractUserRole):
         'update_comment': True,
         'delete_comment': True,
         'view_company': True,
+        'view_project_team': True,
     }
