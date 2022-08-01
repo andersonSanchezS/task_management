@@ -15,10 +15,11 @@ from datetime import datetime as dt
 
 @api_view(['GET'])
 @has_permission_decorator('view_team_member')
-def getTeamMembers(request,pk):
+def getTeamMembers(request, pk):
     try:
         token = decodeJWT(request)
         team_member = TeamMember.objects.filter(pk=pk, company_id=token['company_id'])
+        print(team_member)
         serializer = TeamMemberSerializer(team_member, many=True)
         return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     except TeamMember.DoesNotExist:
@@ -32,7 +33,7 @@ def getTeamMembers(request,pk):
 def createTeamMember(request):
     try:
         token = decodeJWT(request)
-        if token['company_id'] == request.data['company']:
+        if token['company_id'] == request.data['company'] and request.data['company'] == token['company_id']:
             serializer = TeamMemberSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()

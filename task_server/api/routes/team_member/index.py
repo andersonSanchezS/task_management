@@ -3,5 +3,5 @@ from task_server.api.views.team_member.index import getTeamMembers, createTeamMe
 
 urlpatterns = [
     path('list/<int:pk>', getTeamMembers, name='list-team-members'),
-    path('create/<int:pk>', createTeamMember, name='create-team-member'),
+    path('create', createTeamMember, name='create-team-member'),
 ]

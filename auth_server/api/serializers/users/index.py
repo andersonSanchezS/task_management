@@ -4,6 +4,8 @@ from rest_framework import serializers
 from auth_server.models import User
 # Role serializer
 from rolepermissions.roles import assign_role
+# Serializers
+from task_server.api.serializers.company.index import CompanySerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -46,3 +48,9 @@ class UserSerializer(serializers.ModelSerializer):
             user.delete()
             raise serializers.ValidationError('invalid role')
 
+
+class UserReadOonlySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'email', 'company']
+        read_only_fields = ['id', 'first_name', 'last_name', 'email', 'company']
