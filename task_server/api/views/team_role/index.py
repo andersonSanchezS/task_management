@@ -73,39 +73,18 @@ def updateTeamRole(request, pk):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['DELETE'])
-@has_permission_decorator('delete_team_role')
-def deleteTeamRole(request, pk):
-    try:
-        token = decodeJWT(request)
-        if token['is_admin'] or (token['company_id'] == request.data['company']
-                                 and token['roles'].count('manager') == 1):
-            team_role = Team_role.objects.get(pk=pk)
-            team_role.state = False
-            team_role.updated_at = dt.utcnow()
-            team_role.save()
-            return Response({'data': 'Team Role deleted'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'You are not authorized to access this resource'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-    except Team_role.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
 @api_view(['PUT'])
 @has_permission_decorator('update_team_role')
-def activateTeamRole(request, pk):
+def updateTeamRoleStatus(request, pk):
     try:
         token = decodeJWT(request)
-        if token['is_admin'] or (token['company_id'] == request.data['company']
-                                 and token['roles'].count('manager') == 1):
+        if token['company_id'] == request.data['company'] and (token['is_admin']
+                                                               or token['roles'].count('manager') == 1):
             team_role = Team_role.objects.get(pk=pk)
-            team_role.state = True
             team_role.updated_at = dt.utcnow()
+            team_role.state = request.data['state']
             team_role.save()
-            return Response({'data': 'Team Role updated'}, status=status.HTTP_200_OK)
+            return Response({'data': 'team state updated'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
