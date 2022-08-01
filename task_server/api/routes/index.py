@@ -8,4 +8,6 @@ urlpatterns = [
     path('projects/', include('task_server.api.routes.project.index')),
     path('project_teams/', include('task_server.api.routes.project_team.index')),
     path('tasks/', include('task_server.api.routes.task.index')),
+    path('tasks/comments/', include('task_server.api.routes.task_comments.index')),
+    path('incidences/', include('task_server.api.routes.incidence.index')),
 ]

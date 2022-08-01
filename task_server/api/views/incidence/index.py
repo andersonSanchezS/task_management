@@ -5,23 +5,23 @@ from rest_framework.decorators import api_view
 # Roles and permissions
 from rolepermissions.decorators import has_permission_decorator
 # Models
-from task_server.models import Task
+from task_server.models import Incidence
 # Serializers
-from task_server.api.serializers.task.index import TaskSerializer, TaskReadOnlySerializer
+from task_server.api.serializers.incidence.index import IncidenceSerializer, IncidenceReadOnlySerializer
 # Utils
 from auth_server.utils.decodeJWT import decodeJWT
 from datetime import datetime as dt
 
 
 @api_view(['POST'])
-@has_permission_decorator('add_task')
-def createTask(request):
+@has_permission_decorator('add_incidence')
+def createIncidence(request):
     try:
         token = decodeJWT(request)
         if (token['is_admin'] and token['company_id'] == request.data['company']) \
                 or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
 
-            serializer = TaskSerializer(data=request.data)
+            serializer = IncidenceSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
@@ -30,60 +30,40 @@ def createTask(request):
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
-    except Task.DoesNotExist:
+    except Incidence.DoesNotExist:
         return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['GET'])
-@has_permission_decorator('view_task')
-def getTasks(request, pk):
+@has_permission_decorator('view_incidence')
+def getIncidences(request, pk):
     try:
         token = decodeJWT(request)
         if (token['is_admin'] and token['company_id'] == request.data['company']) \
                 or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-            task = Task.objects.filter(project_id=pk)
-            serializer = TaskReadOnlySerializer(task, many=True)
+            incidence = Incidence.objects.filter(task_id=pk)
+            serializer = IncidenceReadOnlySerializer(incidence, many=True)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
-    except Task.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET'])
-@has_permission_decorator('view_task')
-def getTask(request, pk):
-    try:
-        token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-            task = Task.objects.get(id=pk)
-            serializer = TaskReadOnlySerializer(task)
-            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'You are not authorized to access this resource'},
-                            status=status.HTTP_401_UNAUTHORIZED)
-    except Task.DoesNotExist:
+    except Incidence.DoesNotExist:
         return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])
-@has_permission_decorator('update_task')
-def updateTask(request, pk):
+@has_permission_decorator('update_incidence')
+def updateIncidence(request, pk):
     try:
-        print(request.data)
         token = decodeJWT(request)
         if (token['is_admin'] and token['company_id'] == request.data['company']) \
                 or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-            task = Task.objects.get(id=pk)
-            serializer = TaskSerializer(instance=task, data=request.data)
+            incidence = Incidence.objects.get(id=pk)
+            serializer = IncidenceSerializer(incidence, data=request.data)
             if serializer.is_valid():
                 serializer.save()
                 return Response({'data': serializer.data}, status=status.HTTP_200_OK)
@@ -92,27 +72,28 @@ def updateTask(request, pk):
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
-    except Task.DoesNotExist:
+    except Incidence.DoesNotExist:
         return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])
-@has_permission_decorator('update_task')
-def updateTaskState(request, pk):
+@has_permission_decorator('update_incidence')
+def updateIncidenceStatus(request, pk):
     try:
         token = decodeJWT(request)
         if (token['is_admin'] and token['company_id'] == request.data['company']) \
                 or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-            task = Task.objects.get(id=pk)
-            task.state = request.data['state']
-            task.save()
-            return Response({'data': 'Task state updated'}, status=status.HTTP_200_OK)
+            incidence = Incidence.objects.get(id=pk)
+            incidence.state = request.data['state']
+            incidence.updated_at = dt.utcnow()
+            incidence.save()
+            return Response({'data': 'Incidence updated'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
-    except Task.DoesNotExist:
+    except Incidence.DoesNotExist:
         return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
