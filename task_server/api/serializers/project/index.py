@@ -12,5 +12,5 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = "__all__"
         read_only_fields = ['state', 'created_at', 'updated_at']
-        required_fields = ['name', 'description', 'team', 'company']
+        required_fields = ['name', 'description','company']
 

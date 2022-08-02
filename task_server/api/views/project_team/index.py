@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 # Roles and permissions
 from rolepermissions.decorators import has_permission_decorator
 # Models
-from task_server.models import ProjectTeam
+from task_server.models import ProjectTeam, Project
 # Serializers
 from task_server.api.serializers.project_team.index import ProjectTeamSerializer, ProjectTeamReadOnlySerializer
 # Utils
@@ -19,8 +19,12 @@ def getProjectTeams(request, pk):
     try:
         token = decodeJWT(request)
         project_team = ProjectTeam.objects.filter(project_id=pk)
-        serializer = ProjectTeamReadOnlySerializer(project_team, many=True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        project = Project.objects.get(id=pk)
+        if project.company_id == token['company_id']:
+            serializer = ProjectTeamReadOnlySerializer(project_team, many=True)
+            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'You are not authorized to view this data'}, status=status.HTTP_401_UNAUTHORIZED)
     except ProjectTeam.DoesNotExist:
         return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
@@ -32,9 +36,9 @@ def getProjectTeams(request, pk):
 def createProjectTeam(request):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-
+        project = Project.objects.get(id=request.data['project'])
+        company = token['company_id'] == project.company_id
+        if (token['is_admin'] and company) or (company and token['roles'].count('manager') == 1):
             serializer = ProjectTeamSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -55,10 +59,10 @@ def createProjectTeam(request):
 def updateProjectTeamState(request, pk):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-
-            project_team = ProjectTeam.objects.get(id=pk)
+        project_team = ProjectTeam.objects.get(id=pk)
+        project = Project.objects.get(id=project_team.project_id)
+        company = token['company_id'] == project.company_id
+        if (token['is_admin'] and company) or (company and token['roles'].count('manager') == 1):
             project_team.state = request.data['state']
             project_team.updated_at = dt.now()
             project_team.save()

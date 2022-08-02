@@ -36,7 +36,7 @@ def getProject(request, pk):
         serializer = ProjectSerializer(project)
         return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     except Project.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -46,9 +46,9 @@ def getProject(request, pk):
 def createProject(request):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company'] or (
+        if (token['is_admin'] and token['company_id'] == request.data['company']) or (
                 (token['roles'].count('manager') == 1 and request.data['company'] == token['company_id'])
-        )):
+        ):
             serializer = ProjectSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -67,10 +67,9 @@ def createProject(request):
 def updateProject(request, pk):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company'] or (
-                (token['roles'].count('manager') == 1 and request.data['company'] == token['company_id'])
-        )):
-            project = Project.objects.get(pk=pk)
+        project = Project.objects.get(pk=pk)
+        company = project.company_id == token['company_id'] and request.data['company'] == token['company_id']
+        if (token['is_admin'] and company) or (token['roles'].count('manager') == 1 and company):
             serializer = ProjectSerializer(instance=project, data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -91,10 +90,9 @@ def updateProject(request, pk):
 def updateState(request, pk):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company'] or (
-                (token['roles'].count('manager') == 1 and request.data['company'] == token['company_id'])
-        )):
-            project = Project.objects.get(pk=pk)
+        project = Project.objects.get(pk=pk)
+        company = project.company_id == token['company_id']
+        if (token['is_admin'] and company) or (token['roles'].count('manager') == 1 and company):
             project.state = request.data['state']
             project.save()
             return Response({'data': 'state updated'}, status=status.HTTP_200_OK)

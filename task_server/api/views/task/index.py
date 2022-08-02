@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 # Roles and permissions
 from rolepermissions.decorators import has_permission_decorator
 # Models
-from task_server.models import Task
+from task_server.models import Task, Project
 # Serializers
 from task_server.api.serializers.task.index import TaskSerializer, TaskReadOnlySerializer
 # Utils
@@ -18,9 +18,9 @@ from datetime import datetime as dt
 def createTask(request):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-
+        project = Project.objects.get(id=request.data['project'])
+        company = token['company_id'] == project.company_id
+        if (token['is_admin'] and company) or (company and token['roles'].count('manager') == 1):
             serializer = TaskSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -30,8 +30,8 @@ def createTask(request):
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
-    except Task.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    except Project.DoesNotExist:
+        return Response({'Error': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -41,8 +41,9 @@ def createTask(request):
 def getTasks(request, pk):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
+        project = Project.objects.get(id=pk)
+        company = token['company_id'] == project.company_id
+        if (token['is_admin'] and company) or (company and token['roles'].count('manager') == 1):
             task = Task.objects.filter(project_id=pk)
             serializer = TaskReadOnlySerializer(task, many=True)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
@@ -51,6 +52,8 @@ def getTasks(request, pk):
                             status=status.HTTP_401_UNAUTHORIZED)
     except Task.DoesNotExist:
         return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    except Project.DoesNotExist:
+        return Response({'Error': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -59,17 +62,11 @@ def getTasks(request, pk):
 @has_permission_decorator('view_task')
 def getTask(request, pk):
     try:
-        token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-            task = Task.objects.get(id=pk)
-            serializer = TaskReadOnlySerializer(task)
-            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
-        else:
-            return Response({'error': 'You are not authorized to access this resource'},
-                            status=status.HTTP_401_UNAUTHORIZED)
+        task = Task.objects.get(id=pk)
+        serializer = TaskReadOnlySerializer(task)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     except Task.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'Error': 'Task Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -78,11 +75,11 @@ def getTask(request, pk):
 @has_permission_decorator('update_task')
 def updateTask(request, pk):
     try:
-        print(request.data)
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
-            task = Task.objects.get(id=pk)
+        task = Task.objects.get(id=pk)
+        permission = token['team_member_ids'].count(task.informer_id) == 1 \
+                     or token['team_member_ids'].count(task.responsible_id) == 1
+        if (token['is_admin'] or token['roles'].count('manager') == 1) or permission:
             serializer = TaskSerializer(instance=task, data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -103,8 +100,10 @@ def updateTask(request, pk):
 def updateTaskState(request, pk):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) \
-                or (token['company_id'] == request.data['company'] and token['roles'].count('manager') == 1):
+        task = Task.objects.get(id=pk)
+        permission = token['team_member_ids'].count(task.informer_id) == 1 \
+                     or token['team_member_ids'].count(task.responsible_id) == 1
+        if (token['is_admin'] or token['roles'].count('manager') == 1) or permission:
             task = Task.objects.get(id=pk)
             task.state = request.data['state']
             task.save()
