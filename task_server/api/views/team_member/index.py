@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 # Roles and permissions
 from rolepermissions.decorators import has_permission_decorator
 # Models
-from task_server.models import TeamMember
+from task_server.models import TeamMember, Team
 from auth_server.models import User
 # Serializers
 from task_server.api.serializers.team_member.index import TeamMemberSerializer, TeamMemberReadOnlySerializer
@@ -19,11 +19,17 @@ from datetime import datetime as dt
 def getTeamMembers(request, pk):
     try:
         token = decodeJWT(request)
-        team_member = TeamMember.objects.filter(team_id=pk, company_id=token['company_id'])
-        serializer = TeamMemberReadOnlySerializer(team_member, many=True)
-        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        team_member = TeamMember.objects.filter(team_id=pk)
+        team = Team.objects.get(id=team_member[0].team_id)
+        company = team.company.id == token['company_id']
+        if company:
+            serializer = TeamMemberReadOnlySerializer(team_member, many=True)
+            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'You are not authorized to view this'},
+                            status=status.HTTP_401_UNAUTHORIZED)
     except TeamMember.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'Error': 'Team Member Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -34,7 +40,9 @@ def getTeamMember(request, pk):
     try:
         token = decodeJWT(request)
         team_member = TeamMember.objects.get(pk=pk)
-        if team_member.company_id == token['company_id']:
+        team = Team.objects.get(id=team_member.team_id)
+        company = team.company.id == token['company_id']
+        if company:
             serializer = TeamMemberReadOnlySerializer(team_member)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
         else:
@@ -51,9 +59,9 @@ def getTeamMember(request, pk):
 def createTeamMember(request):
     try:
         token = decodeJWT(request)
-        user = User.objects.get(pk=request.data['user'])
-        company = token['company_id'] == user.company_id
-        if company and (token['is_admin'] or token['roles'].count('manager') == 1):
+        user = User.objects.get(id=request.data['user'])
+        company = token['company_id'] == user.company_id and (token['is_admin'] or token['roles'].count('manager') == 1)
+        if company:
             serializer = TeamMemberSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -74,9 +82,11 @@ def createTeamMember(request):
 def updateTeamMember(request, pk):
     try:
         token = decodeJWT(request)
-        if token['company_id'] == request.data['company'] and (token['is_admin']
-                                                               or token['roles'].count('manager') == 1):
-            team_member = TeamMember.objects.get(pk=pk, company_id=token['company_id'])
+        team_member = TeamMember.objects.get(id=pk)
+        team = Team.objects.get(id=team_member.team_id)
+        company = team.company.id == token['company_id'] and (token['is_admin'] or token['roles'].count('manager') == 1)
+        if company:
+            team_member = TeamMember.objects.get(pk=pk)
             serializer = TeamMemberSerializer(team_member, data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -97,9 +107,10 @@ def updateTeamMember(request, pk):
 def updateState(request, pk):
     try:
         token = decodeJWT(request)
-        if token['company_id'] == request.data['company'] and (token['is_admin']
-                                                               or token['roles'].count('manager') == 1):
-            team_member = TeamMember.objects.get(pk=pk, company_id=token['company_id'])
+        team_member = TeamMember.objects.get(pk=pk)
+        team = Team.objects.get(id=team_member.team_id)
+        company = team.company.id == token['company_id'] and (token['is_admin'] or token['roles'].count('manager') == 1)
+        if company:
             team_member.state = request.data['state']
             team_member.save()
             serializer = TeamMemberSerializer(team_member)
