@@ -69,7 +69,8 @@ def updateTeam(request, pk):
     try:
         token = decodeJWT(request)
         team = Team.objects.get(pk=pk)
-        if token['is_admin'] or (token['roles'].count('manager') == 1 and team.company_id == token['company_id']):
+        company = token['company_id'] == team.company_id
+        if (token['is_admin'] and company) or (token['roles'].count('manager') == 1 and company):
             serializer = TeamSerializer(team, data=request.data)
             team.updated_at = dt.utcnow()
             if serializer.is_valid():
@@ -86,14 +87,14 @@ def updateTeam(request, pk):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 @api_view(['PUT'])
 @has_permission_decorator('update_team')
 def updateState(request, pk):
     try:
         token = decodeJWT(request)
         team = Team.objects.get(pk=pk)
-        if token['is_admin'] or (token['roles'].count('manager') == 1 and team.company_id == token['company_id']):
+        company = token['company_id'] == team.company_id
+        if (token['is_admin'] and company) or (token['roles'].count('manager') == 1 and company):
             team.state = request.data['state']
             team.updated_at = dt.utcnow()
             team.save()

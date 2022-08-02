@@ -53,7 +53,7 @@ def removePermission(request, pk):
         user = User.objects.get(pk=pk)
         if token['is_admin'] or token['roles'].count('manager') == 1:
             revoke_permission(user, request.data['permission'])
-            return Response({'msg': 'Permission granted'}, status=status.HTTP_200_OK)
+            return Response({'msg': 'Permission removed'}, status=status.HTTP_200_OK)
         return Response({'msg': 'You are not authorized to delete this permission'})
     except Exception as e:
         if str(e) == 'User matching query does not exist.':

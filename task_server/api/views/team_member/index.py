@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view
 from rolepermissions.decorators import has_permission_decorator
 # Models
 from task_server.models import TeamMember
+from auth_server.models import User
 # Serializers
 from task_server.api.serializers.team_member.index import TeamMemberSerializer, TeamMemberReadOnlySerializer
 # Utils
@@ -50,8 +51,9 @@ def getTeamMember(request, pk):
 def createTeamMember(request):
     try:
         token = decodeJWT(request)
-        if token['company_id'] == request.data['company'] and (token['is_admin']
-                                                               or token['roles'].count('manager') == 1):
+        user = User.objects.get(pk=request.data['user'])
+        company = token['company_id'] == user.company_id
+        if company and (token['is_admin'] or token['roles'].count('manager') == 1):
             serializer = TeamMemberSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -61,8 +63,8 @@ def createTeamMember(request):
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
-    except TeamMember.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    except User.DoesNotExist:
+        return Response({'Error': 'User Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

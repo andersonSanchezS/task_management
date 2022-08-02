@@ -10,4 +10,5 @@ urlpatterns = [
     path('tasks/', include('task_server.api.routes.task.index')),
     path('tasks/comments/', include('task_server.api.routes.task_comments.index')),
     path('incidences/', include('task_server.api.routes.incidence.index')),
+    path('incidences/comments/', include('task_server.api.routes.incidence_comments.index')),
 ]
