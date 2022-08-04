@@ -35,6 +35,9 @@ def getCompany(request, pk):
 def createCompany(request):
     try:
         serializer = CompanySerializer(data=request.data)
+        company = Company.objects.filter(description=request.data['description'])
+        if company:
+            return Response({'error': 'Company already exists'}, status=status.HTTP_400_BAD_REQUEST)
         if serializer.is_valid():
             serializer.save()
             return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
@@ -66,3 +69,14 @@ def updateCompany(request, pk):
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['DELETE'])
+def deleteCompany(request, pk):
+    try:
+        company = Company.objects.get(pk=pk)
+        company.delete()
+        return Response({'msg': 'company deleted'}, status=status.HTTP_204_NO_CONTENT)
+    except Company.DoesNotExist:
+        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

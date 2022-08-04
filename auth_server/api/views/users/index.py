@@ -1,10 +1,13 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import serializers
 # Models
 from auth_server.models import User
+from task_server.models import Company
 # Serializers
 from auth_server.api.serializers.users.index import UserSerializer
+from task_server.api.serializers.company.index import CompanySerializer
 # Permissions
 from rolepermissions.decorators import has_permission_decorator
 # Utils
@@ -15,13 +18,32 @@ from datetime import datetime as dt
 @api_view(['POST'])
 def registerUser(request):
     try:
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        validate_company = Company.objects.filter(description=request.data['company'])
+        user = User.objects.filter(email=request.data['email'])
+        request.data['description'] = request.data['company']
+        if len(validate_company) == 0 and len(user) == 0:
+            company_serializer = CompanySerializer(data=request.data)
+            if company_serializer.is_valid():
+                company_serializer.save()
+                request.data['company'] = company_serializer.data['id']
+                user_serializer = UserSerializer(data=request.data)
+                if user_serializer.is_valid():
+                    user_serializer.save()
+                    return Response({'message': user_serializer.data}, status=status.HTTP_201_CREATED)
+                else:
+                    return Response({'message': user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'message': company_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if len(user) > 0:
+                return Response({'message': 'Ya hay un usuario registrado con este correo'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'message': 'Ya existe una empresa con este nombre'},
+                                status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
-        return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @api_view(['DELETE'])
@@ -35,12 +57,12 @@ def deleteUser(request):
             user.is_active = False
             user.updated_at = dt.utcnow()
             user.save()
-            return Response({'msg': 'User deleted'}, status=status.HTTP_200_OK)
-        return Response({'msg': 'You are not authorized to delete this user'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': 'User deleted'}, status=status.HTTP_200_OK)
+        return Response({'message': 'You are not authorized to delete this user'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
-            return Response({'Error': 'User is actually deactivated or not exists'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'User is actually deactivated or not exists'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -58,8 +80,8 @@ def activateUser(request):
         return Response({'message': 'You are not authorized to activate this user'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
-            return Response({'Error': 'User is actually activated'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'User is actually activated'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])
@@ -80,5 +102,5 @@ def updateUser(request):
         return Response({'message': 'You are not authorized to update this user'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
-            return Response({'Error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'Error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

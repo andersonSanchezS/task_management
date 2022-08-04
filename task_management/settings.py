@@ -35,7 +35,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rolepermissions',
     'auth_server',
-    'task_server'
+    'task_server',
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -46,6 +47,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware'
 ]
 
 ROOT_URLCONF = 'task_management.urls'
@@ -137,3 +140,5 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=730)
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
