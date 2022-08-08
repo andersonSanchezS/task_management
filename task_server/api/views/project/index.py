@@ -36,9 +36,9 @@ def getProject(request, pk):
         serializer = ProjectSerializer(project)
         return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     except Project.DoesNotExist:
-        return Response({'error': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'message': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -56,10 +56,10 @@ def createProject(request):
             else:
                 return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error': 'You are not authorized to access this resource'},
+            return Response({'message': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])
@@ -75,14 +75,14 @@ def updateProject(request, pk):
                 serializer.save()
                 return Response({'data': serializer.data}, status=status.HTTP_200_OK)
             else:
-                return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'error': 'You are not authorized to access this resource'},
+            return Response({'message': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Project.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])
@@ -97,9 +97,9 @@ def updateState(request, pk):
             project.save()
             return Response({'data': 'state updated'}, status=status.HTTP_200_OK)
         else:
-            return Response({'error': 'You are not authorized to access this resource'},
+            return Response({'message': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Project.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

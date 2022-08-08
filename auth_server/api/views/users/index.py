@@ -45,7 +45,6 @@ def registerUser(request):
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-
 @api_view(['DELETE'])
 @has_permission_decorator('delete_user')
 def deleteUser(request):
@@ -77,7 +76,8 @@ def activateUser(request):
             user.updated_at = dt.utcnow()
             user.save()
             return Response({'message': 'User Activated'}, status=status.HTTP_200_OK)
-        return Response({'message': 'You are not authorized to activate this user'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': 'You are not authorized to activate this user'},
+                        status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'message': 'User is actually activated'}, status=status.HTTP_404_NOT_FOUND)

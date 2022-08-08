@@ -53,7 +53,6 @@ class User(auth_models.AbstractUser):
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(unique=True, max_length=255)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
     username = None
 
     objects = UserManager()

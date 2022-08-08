@@ -21,7 +21,7 @@ def userPermissions(request, pk):
         if token['is_admin'] or token['user_id'] == user.id:
             permissions = available_perm_status(user)
             return Response({'data': permissions}, status=status.HTTP_200_OK)
-        return Response({'msg': 'You are not authorized to view this user permissions'},
+        return Response({'message': 'You are not authorized to view this user permissions'},
                         status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
@@ -37,8 +37,8 @@ def addPermission(request, pk):
         user = User.objects.get(pk=pk)
         if token['is_admin'] or token['roles'].count('manager') == 1:
             grant_permission(user, request.data['permission'])
-            return Response({'msg': 'Permission granted'}, status=status.HTTP_200_OK)
-        return Response({'msg': 'You are not authorized to add this permission'})
+            return Response({'message': 'Permission granted'}, status=status.HTTP_200_OK)
+        return Response({'message': 'You are not authorized to add this permission'})
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -53,8 +53,8 @@ def removePermission(request, pk):
         user = User.objects.get(pk=pk)
         if token['is_admin'] or token['roles'].count('manager') == 1:
             revoke_permission(user, request.data['permission'])
-            return Response({'msg': 'Permission removed'}, status=status.HTTP_200_OK)
-        return Response({'msg': 'You are not authorized to delete this permission'})
+            return Response({'message': 'Permission removed'}, status=status.HTTP_200_OK)
+        return Response({'message': 'You are not authorized to delete this permission'})
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)

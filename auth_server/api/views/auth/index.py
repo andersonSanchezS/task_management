@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 # Roles and permissions
 from rolepermissions.roles import get_user_roles
 # Models
-from task_server.models import TeamMember
+from task_server.models import TeamMember, Project
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -32,7 +32,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['company_name'] = user.company.description
         token['roles'] = roles
         token['is_admin'] = is_admin
-
 
         return token
 

@@ -36,8 +36,8 @@ def addRole(request, pk):
         user = User.objects.get(pk=pk)
         if token['is_admin'] or role == 'worker':
             assign_role(user, role)
-            return Response({'msg': 'Role added'}, status=status.HTTP_200_OK)
-        return Response({'msg': 'You are not authorized to add this role'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'message': 'Role added'}, status=status.HTTP_200_OK)
+        return Response({'message': 'You are not authorized to add this role'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
             return Response({'Error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)

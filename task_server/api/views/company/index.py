@@ -21,7 +21,7 @@ def getCompany(request, pk):
         if token['company_id'] == pk:
             company = Company.objects.get(pk=pk)
             serializer = CompanySerializer(company)
-            return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
@@ -40,7 +40,7 @@ def createCompany(request):
             return Response({'error': 'Company already exists'}, status=status.HTTP_400_BAD_REQUEST)
         if serializer.is_valid():
             serializer.save()
-            return Response({'data': serializer.data}, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
@@ -58,14 +58,14 @@ def updateCompany(request, pk):
             serializer = CompanySerializer(company, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response({'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Company.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -75,8 +75,8 @@ def deleteCompany(request, pk):
     try:
         company = Company.objects.get(pk=pk)
         company.delete()
-        return Response({'msg': 'company deleted'}, status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'company deleted'}, status=status.HTTP_204_NO_CONTENT)
     except Company.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

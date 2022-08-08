@@ -3,7 +3,7 @@ from rest_framework import serializers
 # Models
 from task_server.models import IncidenceComment, TaskComment
 # Serializers
-from task_server.api.serializers.team_member.index import TeamMemberSerializer
+from task_server.api.serializers.team_member.index import TeamMemberSerializer, TeamMemberReadOnlySerializer
 
 
 class TaskCommentSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class IncidenceCommentSerializer(serializers.ModelSerializer):
 
 
 class TaskCommentReadOnlySerializer(serializers.ModelSerializer):
-    teamMember = TeamMemberSerializer(read_only=True)
+    teamMember = TeamMemberReadOnlySerializer(read_only=True)
     class Meta:
         model = TaskComment
         fields = "__all__"
@@ -36,7 +36,7 @@ class TaskCommentReadOnlySerializer(serializers.ModelSerializer):
 
 
 class IncidenceCommentReadOnlySerializer(serializers.ModelSerializer):
-    teamMember = TeamMemberSerializer(read_only=True)
+    teamMember = TeamMemberReadOnlySerializer(read_only=True)
     class Meta:
         model = IncidenceComment
         fields = "__all__"

@@ -38,7 +38,6 @@ class UserSerializer(serializers.ModelSerializer):
             if User.objects.filter(email=self.validated_data['email']).exists():
                 raise serializers.ValidationError({'Email': 'Email already exists'})
 
-
             account = User(email=self.validated_data['email'],
                            company=self.validated_data['company'],
                            first_name=self.validated_data['first_name'],
@@ -49,9 +48,15 @@ class UserSerializer(serializers.ModelSerializer):
             try:
                 assign_role(user, self.validated_data['role'])
             except Exception as e:
+                print(self.validated_data)
                 user.delete()
+                company = Company.objects.get(description=self.validated_data['company'])
+                company.delete()
                 raise serializers.ValidationError('invalid role')
         except Exception as e:
+            print(self.validated_data)
+            company = Company.objects.get(description=self.validated_data['company'])
+            company.delete()
             raise serializers.ValidationError(str(e))
 
 
