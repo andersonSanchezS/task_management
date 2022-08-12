@@ -41,9 +41,7 @@ def createTask(request):
 def getTasks(request, pk):
     try:
         token = decodeJWT(request)
-        project = Project.objects.get(id=pk)
-        company = token['company_id'] == project.company_id
-        if (token['is_admin'] and company) or (company and token['roles'].count('manager') == 1):
+        if token['is_admin'] or (token['roles'].count('manager') == 1):
             task = Task.objects.filter(project_id=pk)
             serializer = TaskReadOnlySerializer(task, many=True)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
@@ -51,9 +49,7 @@ def getTasks(request, pk):
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Task.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
-    except Project.DoesNotExist:
-        return Response({'Error': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -66,7 +62,7 @@ def getTask(request, pk):
         serializer = TaskReadOnlySerializer(task)
         return Response({'data': serializer.data}, status=status.HTTP_200_OK)
     except Task.DoesNotExist:
-        return Response({'Error': 'Task Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Task Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -112,6 +108,6 @@ def updateTaskState(request, pk):
             return Response({'error': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Task.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

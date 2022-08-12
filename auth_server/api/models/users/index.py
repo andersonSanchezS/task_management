@@ -17,8 +17,6 @@ class UserManager(auth_models.BaseUserManager):
             raise ValueError('Users must have a last name')
         if not password:
             raise ValueError('Users must have a password')
-        if not company:
-            raise ValueError('Users must have a company')
         if not role:
             raise ValueError('Users must have a role')
 
@@ -44,8 +42,10 @@ class UserManager(auth_models.BaseUserManager):
             email=email,
             password=password,
             is_staff=True,
+            is_superuser=True,
+            company=None,
+            role='admin'
         )
-        user.save()
         return user
 
 
@@ -53,6 +53,7 @@ class User(auth_models.AbstractUser):
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     email = models.EmailField(unique=True, max_length=255)
+    company = models.ForeignKey(Company, default=None, null=True, on_delete=models.CASCADE)
     username = None
 
     objects = UserManager()

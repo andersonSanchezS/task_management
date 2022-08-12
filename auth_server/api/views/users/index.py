@@ -20,26 +20,35 @@ def registerUser(request):
     try:
         validate_company = Company.objects.filter(description=request.data['company'])
         user = User.objects.filter(email=request.data['email'])
-        request.data['description'] = request.data['company']
         if len(validate_company) == 0 and len(user) == 0:
-            company_serializer = CompanySerializer(data=request.data)
-            if company_serializer.is_valid():
-                company_serializer.save()
-                request.data['company'] = company_serializer.data['id']
+            if request.data['company'] is not None:
+                request.data['description'] = request.data['company']
+                company_serializer = CompanySerializer(data=request.data)
+                if company_serializer.is_valid():
+                    company_serializer.save()
+                    request.data['company'] = company_serializer.data['id']
+                    user_serializer = UserSerializer(data=request.data)
+                    if user_serializer.is_valid():
+                        user_serializer.save()
+                        return Response(user_serializer.data, status=status.HTTP_201_CREATED)
+                    else:
+                        return Response({'error': user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'error': company_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                request.data['company'] = None
                 user_serializer = UserSerializer(data=request.data)
                 if user_serializer.is_valid():
                     user_serializer.save()
-                    return Response({'message': user_serializer.data}, status=status.HTTP_201_CREATED)
+                    return Response(user_serializer.data, status=status.HTTP_201_CREATED)
                 else:
-                    return Response({'message': user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({'message': company_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'error': user_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
             if len(user) > 0:
-                return Response({'message': 'Ya hay un usuario registrado con este correo'},
+                return Response({'error': 'Ya hay un usuario registrado con este correo'},
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'message': 'Ya existe una empresa con este nombre'},
+                return Response({'error': 'Ya existe una empresa con este nombre'},
                                 status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -57,11 +66,11 @@ def deleteUser(request):
             user.updated_at = dt.utcnow()
             user.save()
             return Response({'message': 'User deleted'}, status=status.HTTP_200_OK)
-        return Response({'message': 'You are not authorized to delete this user'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'error': 'You are not authorized to delete this user'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
-            return Response({'message': 'User is actually deactivated or not exists'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'User is actually deactivated or not exists'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -76,12 +85,12 @@ def activateUser(request):
             user.updated_at = dt.utcnow()
             user.save()
             return Response({'message': 'User Activated'}, status=status.HTTP_200_OK)
-        return Response({'message': 'You are not authorized to activate this user'},
+        return Response({'error': 'You are not authorized to activate this user'},
                         status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
-            return Response({'message': 'User is actually activated'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'User is actually activated'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['PUT'])
@@ -99,8 +108,8 @@ def updateUser(request):
             user.updated_at = dt.utcnow()
             user.save()
             return Response({'message': 'User updated'}, status=status.HTTP_200_OK)
-        return Response({'message': 'You are not authorized to update this user'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'error': 'You are not authorized to update this user'}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
         if str(e) == 'User matching query does not exist.':
-            return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -48,7 +48,6 @@ class UserSerializer(serializers.ModelSerializer):
             try:
                 assign_role(user, self.validated_data['role'])
             except Exception as e:
-                print(self.validated_data)
                 user.delete()
                 company = Company.objects.get(description=self.validated_data['company'])
                 company.delete()

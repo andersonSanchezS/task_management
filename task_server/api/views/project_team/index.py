@@ -19,14 +19,16 @@ def getProjectTeams(request, pk):
     try:
         token = decodeJWT(request)
         project_team = ProjectTeam.objects.filter(project_id=pk)
-        project = Project.objects.get(id=pk)
+        project = Project.objects.get(id=pk, company_id=token['company_id'])
         if project.company_id == token['company_id']:
             serializer = ProjectTeamReadOnlySerializer(project_team, many=True)
             return Response({'data': serializer.data}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'You are not authorized to view this data'}, status=status.HTTP_401_UNAUTHORIZED)
     except ProjectTeam.DoesNotExist:
-        return Response({'Error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    except Project.DoesNotExist:
+        return Response({'error': 'Project Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -36,9 +38,7 @@ def getProjectTeams(request, pk):
 def createProjectTeam(request):
     try:
         token = decodeJWT(request)
-        project = Project.objects.get(id=request.data['project'])
-        company = token['company_id'] == project.company_id
-        if (token['is_admin'] and company) or (company and token['roles'].count('manager') == 1):
+        if token['is_admin'] or token['roles'].count('manager') == 1:
             serializer = ProjectTeamSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()

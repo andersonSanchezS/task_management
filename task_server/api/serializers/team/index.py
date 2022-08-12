@@ -3,6 +3,9 @@ from rest_framework import serializers
 # Models
 from task_server.models import Team, TeamMember
 
+# Serializers Utils
+from task_server.api.serializers.team_member.utils import TeamMemberForTeamSerializer
+
 
 class TeamSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,5 +25,5 @@ class TeamReadOnlySerializer(serializers.ModelSerializer):
         required_fields = ['description', 'company']
 
     def get_members(self, obj):
-        members = TeamMember.objects.filter(team=obj)
-        return members
+        result = TeamMember.objects.filter(team=obj)
+        return TeamMemberForTeamSerializer(result, many=True).data

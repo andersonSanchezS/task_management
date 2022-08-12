@@ -25,11 +25,13 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         for member in team_member:
             team_members_ids.append(member.id)
 
+        if user.company:
+            token['company_id'] = user.company.id
+            token['company_name'] = user.company.description
+
         # Add custom claims
         token['name'] = f'{user.first_name} {user.last_name}'
         token['team_member_ids'] = team_members_ids
-        token['company_id'] = user.company.id
-        token['company_name'] = user.company.description
         token['roles'] = roles
         token['is_admin'] = is_admin
 

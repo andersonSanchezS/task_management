@@ -26,3 +26,4 @@ class TeamMemberReadOnlySerializer(serializers.ModelSerializer):
         model = TeamMember
         fields = "__all__"
         read_only_fields = ['state', 'created_at', 'updated_at']
+

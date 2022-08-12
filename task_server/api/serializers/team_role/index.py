@@ -3,7 +3,7 @@ from rest_framework import serializers
 # Models
 from task_server.models import Team_role
 # Serializers
-from task_server.api.serializers.team.index import TeamSerializer
+from task_server.api.serializers.team.index import TeamSerializer, TeamReadOnlySerializer
 
 
 class TeamRoleSerializer(serializers.ModelSerializer):
@@ -16,7 +16,7 @@ class TeamRoleSerializer(serializers.ModelSerializer):
 
 class TeamRoleReadOnlySerializer(serializers.ModelSerializer):
 
-    team = TeamSerializer(read_only=True)
+    team = TeamReadOnlySerializer(read_only=True)
 
     class Meta:
         model = Team_role

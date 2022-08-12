@@ -4,7 +4,7 @@ from rest_framework import serializers
 from task_server.models import ProjectTeam
 
 # Serializers
-from task_server.api.serializers.team.index import TeamSerializer
+from task_server.api.serializers.team.index import TeamSerializer, TeamReadOnlySerializer
 from task_server.api.serializers.project.index import ProjectSerializer
 
 
@@ -17,7 +17,7 @@ class ProjectTeamSerializer(serializers.ModelSerializer):
 
 
 class ProjectTeamReadOnlySerializer(serializers.ModelSerializer):
-    team = TeamSerializer(read_only=True)
+    team = TeamReadOnlySerializer(read_only=True)
 
     class Meta:
         model = ProjectTeam

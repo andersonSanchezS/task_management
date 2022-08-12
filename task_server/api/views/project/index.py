@@ -46,9 +46,8 @@ def getProject(request, pk):
 def createProject(request):
     try:
         token = decodeJWT(request)
-        if (token['is_admin'] and token['company_id'] == request.data['company']) or (
-                (token['roles'].count('manager') == 1 and request.data['company'] == token['company_id'])
-        ):
+        if token['is_admin'] or token['roles'].count('manager') == 1:
+            request.data['company'] = token['company_id']
             serializer = ProjectSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save()
@@ -67,20 +66,19 @@ def createProject(request):
 def updateProject(request, pk):
     try:
         token = decodeJWT(request)
-        project = Project.objects.get(pk=pk)
-        company = project.company_id == token['company_id'] and request.data['company'] == token['company_id']
-        if (token['is_admin'] and company) or (token['roles'].count('manager') == 1 and company):
+        project = Project.objects.get(pk=pk, company_id=token['company_id'])
+        if token['is_admin'] or token['roles'].count('manager') == 1:
             serializer = ProjectSerializer(instance=project, data=request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response({'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'message': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Project.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -90,16 +88,15 @@ def updateProject(request, pk):
 def updateState(request, pk):
     try:
         token = decodeJWT(request)
-        project = Project.objects.get(pk=pk)
-        company = project.company_id == token['company_id']
-        if (token['is_admin'] and company) or (token['roles'].count('manager') == 1 and company):
+        project = Project.objects.get(pk=pk, company_id=token['company_id'])
+        if token['is_admin'] or token['roles'].count('manager') == 1:
             project.state = request.data['state']
             project.save()
-            return Response({'data': 'state updated'}, status=status.HTTP_200_OK)
+            return Response({'message': 'state updated'}, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'You are not authorized to access this resource'},
                             status=status.HTTP_401_UNAUTHORIZED)
     except Project.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'project not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'message': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

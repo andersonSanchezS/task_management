@@ -9,6 +9,7 @@ from auth_server.models import User
 from task_server.models import Company
 # Serializers
 from task_server.api.serializers.company.index import CompanySerializer
+from auth_server.api.serializers.users.index import UserReadOonlySerializer
 # Utils
 from auth_server.utils.decodeJWT import decodeJWT
 from datetime import datetime as dt
@@ -77,6 +78,20 @@ def deleteCompany(request, pk):
         company.delete()
         return Response({'message': 'company deleted'}, status=status.HTTP_204_NO_CONTENT)
     except Company.DoesNotExist:
+        return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@has_permission_decorator('add_team_member')
+def getCompanyTeam(request):
+    try:
+        token = decodeJWT(request)
+        users = User.objects.filter(company_id=token['company_id'])
+        serializer = UserReadOonlySerializer(users, many=True)
+        return Response({'data': serializer.data}, status=status.HTTP_200_OK)
+    except User.DoesNotExist:
         return Response({'error': 'Not Found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
